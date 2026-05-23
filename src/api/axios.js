@@ -1,10 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  // import.meta.env.DEV adalah bawaan Vite.
-  // Jika kamu jalankan 'npm run dev' di laptop, dia pakai "/api" (proxy jalan).
-  // Jika FE di-deploy/di-build, dia otomatis pakai URL Backend Vercel.
-  baseURL: import.meta.env.DEV ? "/api" : "https://edu-be-bice.vercel.app",
+  // Jika berjalan di lokal (npm run dev), gunakan proxy "/api"
+  // Jika berjalan di Vercel (production), gunakan URL Backend lengkap dengan akhiran "/api"
+  baseURL: import.meta.env.DEV ? "/api" : "https://edu-be-bice.vercel.app/api",
   timeout: 20000,
 });
 
