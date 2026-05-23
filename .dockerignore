@@ -1,0 +1,25 @@
+# Paling Penting: Jangan bawa dependensi dan hasil build lokal!
+node_modules
+dist
+build
+
+# File Log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Konfigurasi Docker & Git (Tidak diperlukan di dalam container)
+Dockerfile
+.dockerignore
+.git
+.gitignore
+
+# File Environment (Opsional, tapi bagus untuk keamanan agar kunci rahasia lokal tidak ikut terbawa)
+.env
+.env.local
+.env.development
+.env.test
+
+# Dokumentasi & Lainnya
+README.md
