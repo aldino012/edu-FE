@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API = "/api";
+// IMPORT FILE AXIOS
+import api from "../.././../../api/axios";
 
 export const useAddQuiz = () => {
   const navigate = useNavigate();
@@ -28,16 +29,16 @@ export const useAddQuiz = () => {
     setIsLoadingData(true);
 
     try {
-      const res = await fetch(`${API}/contents`, {
+      // --- PERUBAHAN: Gunakan api.get ---
+      const response = await api.get("/contents", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await res.json();
+      const result = response.data;
 
-      if (res.ok && result.success) {
+      if (result.success) {
         setDataContents(result.data);
       }
     } catch (err) {
@@ -102,18 +103,16 @@ export const useAddQuiz = () => {
         correct_id,
       };
 
-      const res = await fetch(`${API}/quizzes`, {
-        method: "POST",
+      // --- PERUBAHAN: Gunakan api.post ---
+      const response = await api.post("/quizzes", payload, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
-        body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
+      const result = response.data;
 
-      if (res.ok && result.success) {
+      if (result.success) {
         alert("Quiz berhasil ditambahkan!");
         navigate("/admin/quiz/table");
       } else {
@@ -121,7 +120,8 @@ export const useAddQuiz = () => {
       }
     } catch (err) {
       console.error("Submit quiz error:", err);
-      alert("Terjadi kesalahan server");
+      const errMsg = err.response?.data?.message || "Terjadi kesalahan server";
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }

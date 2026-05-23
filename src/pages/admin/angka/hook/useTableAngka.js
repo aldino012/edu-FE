@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// IMPORT FILE AXIOS KITA DI SINI
+import api from "../.././../../api/axios";
+
 const useTableAngka = () => {
   const navigate = useNavigate();
 
@@ -17,19 +20,17 @@ const useTableAngka = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/contents", {
-        method: "GET",
+      // --- PERUBAHAN: Gunakan api.get ---
+      const response = await api.get("/contents", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         const filtered = result.data.filter((item) => item.category_id === 1);
-
         setDataAngka(filtered);
       }
     } catch (error) {
@@ -54,31 +55,29 @@ const useTableAngka = () => {
     setIsSyncing(true);
 
     try {
-      const response = await fetch(
-        "/api/contents/bulk-import",
+      // --- PERUBAHAN: Gunakan api.post dan kirim payload JSON secara langsung ---
+      const response = await api.post(
+        "/contents/bulk-import",
+        { category_id: 1 }, // Axios otomatis mengubah ini menjadi JSON stringify
         {
-          method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${authData?.token}`,
           },
-          body: JSON.stringify({ category_id: 1 }),
         },
       );
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert(result.message);
-
         fetchAngka();
       } else {
         alert(result.message || "Gagal sync data");
       }
     } catch (error) {
-      console.error(error);
-
-      alert("Server error saat sync");
+      console.error("Bulk import error:", error);
+      const errMsg = error.response?.data?.message || "Server error saat sync";
+      alert(errMsg);
     } finally {
       setIsSyncing(false);
     }
@@ -93,26 +92,27 @@ const useTableAngka = () => {
     if (!confirm) return;
 
     try {
-      const response = await fetch(`/api/contents/${id}`, {
-        method: "DELETE",
+      // --- PERUBAHAN: Gunakan api.delete ---
+      const response = await api.delete(`/contents/${id}`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      if (response.ok) {
-        alert("Berhasil dihapus");
+      // Axios akan melempar error (masuk ke catch) jika status bukan 2xx.
+      // Jadi jika sampai ke baris ini, berarti berhasil.
+      const result = response.data;
 
+      if (result.success) {
+        alert("Berhasil dihapus");
         fetchAngka();
       } else {
-        const result = await response.json();
-
         alert(result.message || "Gagal hapus");
       }
     } catch (error) {
-      console.error(error);
-
-      alert("Server error saat hapus");
+      console.error("Delete error:", error);
+      const errMsg = error.response?.data?.message || "Server error saat hapus";
+      alert(errMsg);
     }
   };
 

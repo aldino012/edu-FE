@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "/api";
+// IMPORT FILE AXIOS
+import api from "../.././../../api/axios";
 
 export const useQuizTable = () => {
   const [dataQuiz, setDataQuiz] = useState([]);
@@ -15,17 +16,16 @@ export const useQuizTable = () => {
     try {
       const authData = JSON.parse(localStorage.getItem("admin_auth"));
 
-      const res = await fetch(`${API_URL}/quizzes`, {
-        method: "GET",
+      // --- PERUBAHAN: Gunakan api.get ---
+      const response = await api.get("/quizzes", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await res.json();
+      const result = response.data;
 
-      if (res.ok && result.success) {
+      if (result.success) {
         setDataQuiz(result.data);
       }
     } catch (err) {
@@ -50,24 +50,25 @@ export const useQuizTable = () => {
     try {
       const authData = JSON.parse(localStorage.getItem("admin_auth"));
 
-      const res = await fetch(`${API_URL}/quizzes/${id}`, {
-        method: "DELETE",
+      // --- PERUBAHAN: Gunakan api.delete ---
+      const response = await api.delete(`/quizzes/${id}`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await res.json();
+      const result = response.data;
 
-      if (res.ok) {
+      if (result.success) {
         alert("Quiz berhasil dihapus");
         fetchQuiz();
       } else {
         alert(result.message || "Gagal hapus quiz");
       }
     } catch (err) {
-      console.error(err);
-      alert("Server error");
+      console.error("Delete quiz error:", err);
+      const errMsg = err.response?.data?.message || "Server error";
+      alert(errMsg);
     }
   };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const API = "/api/contents";
+// IMPORT FILE AXIOS
+import api from "../.././../../api/axios";
 
 export const useWarnaTable = () => {
   const [dataWarna, setDataWarna] = useState([]);
@@ -14,16 +15,16 @@ export const useWarnaTable = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(API, {
+      // --- PERUBAHAN: Gunakan api.get ---
+      const response = await api.get("/contents", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         const filtered = result.data.filter((item) => item.category_id === 3);
         setDataWarna(filtered);
       }
@@ -40,19 +41,24 @@ export const useWarnaTable = () => {
     if (!confirm) return;
 
     try {
-      const res = await fetch(`${API}/${id}`, {
-        method: "DELETE",
+      // --- PERUBAHAN: Gunakan api.delete ---
+      const response = await api.delete(`/contents/${id}`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      if (res.ok) {
+      const result = response.data;
+      if (result.success) {
         alert("Berhasil dihapus");
         fetchWarna();
+      } else {
+        alert(result.message || "Gagal hapus data");
       }
     } catch (err) {
       console.error(err);
+      const errMsg = err.response?.data?.message || "Server error saat delete";
+      alert(errMsg);
     }
   };
 
@@ -64,23 +70,29 @@ export const useWarnaTable = () => {
     setIsSyncing(true);
 
     try {
-      const res = await fetch(`${API}/bulk-import`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authData?.token}`,
+      // --- PERUBAHAN: Gunakan api.post ---
+      const response = await api.post(
+        "/contents/bulk-import",
+        { category_id: 3 },
+        {
+          headers: {
+            Authorization: `Bearer ${authData?.token}`,
+          },
         },
-        body: JSON.stringify({ category_id: 3 }),
-      });
+      );
 
-      const result = await res.json();
+      const result = response.data;
 
       if (result.success) {
         alert(result.message);
         fetchWarna();
+      } else {
+        alert(result.message || "Gagal sync data");
       }
     } catch (err) {
       console.error(err);
+      const errMsg = err.response?.data?.message || "Server error saat sync";
+      alert(errMsg);
     } finally {
       setIsSyncing(false);
     }

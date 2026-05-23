@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+// IMPORT FILE AXIOS KITA DI SINI
+import api from "../.././../../api/axios";
+
 const useEditHuruf = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -35,33 +38,30 @@ const useEditHuruf = () => {
       const authData = JSON.parse(localStorage.getItem("admin_auth"));
 
       try {
-        const response = await fetch(
-          `/api/contents/${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authData?.token}`,
-            },
+        // --- PERUBAHAN: Menggunakan api.get ---
+        const response = await api.get(`/contents/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authData?.token}`,
           },
-        );
+        });
 
-        const result = await response.json();
+        const result = response.data;
 
-        if (response.ok && result.success) {
+        if (result.success) {
           setFormData({
             value: result.data.value,
             label: result.data.label,
           });
         } else {
           alert("Gagal mengambil data.");
-
           navigate("/admin/huruf/table");
         }
       } catch (error) {
         console.error("Fetch error:", error);
-
-        alert("Terjadi kesalahan pada server.");
+        const errMsg =
+          error.response?.data?.message || "Terjadi kesalahan pada server.";
+        alert(errMsg);
+        navigate("/admin/huruf/table");
       } finally {
         setIsFetching(false);
       }
@@ -95,27 +95,28 @@ const useEditHuruf = () => {
     }
 
     try {
-      const response = await fetch(`/api/contents/${id}`, {
-        method: "PUT",
+      // --- PERUBAHAN: Menggunakan api.put ---
+      const response = await api.put(`/contents/${id}`, submitData, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
+          // Content-Type multipart otomatis ditangani Axios
         },
-        body: submitData,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert("Data berhasil diupdate!");
-
         navigate("/admin/huruf/table");
       } else {
         alert(result.message || "Gagal update data");
       }
     } catch (error) {
       console.error("Update error:", error);
-
-      alert("Terjadi kesalahan server.");
+      const errMsg =
+        error.response?.data?.message ||
+        "Terjadi kesalahan server saat update.";
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }

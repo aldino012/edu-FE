@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// IMPORT FILE AXIOS
+import api from "../.././../../api/axios";
+
 const useAddWarna = () => {
   const navigate = useNavigate();
 
@@ -42,27 +45,26 @@ const useAddWarna = () => {
     }
 
     try {
-      const response = await fetch("/api/contents", {
-        method: "POST",
+      // --- PERUBAHAN: Gunakan api.post ---
+      const response = await api.post("/contents", submitData, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
-        body: submitData,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert("Data warna berhasil disimpan!");
-
         navigate("/admin/warna/table");
       } else {
         alert(result.message || "Gagal menyimpan data");
       }
     } catch (error) {
       console.error(error);
-
-      alert("Server error saat simpan data");
+      const errMsg =
+        error.response?.data?.message || "Server error saat simpan data";
+      alert(errMsg);
     } finally {
       setIsLoading(false);
     }

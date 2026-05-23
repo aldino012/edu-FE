@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+// IMPORT FILE AXIOS KITA DI SINI
+import api from "../.././../../api/axios";
+
 const useTableHuruf = () => {
   const [dataHuruf, setDataHuruf] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,19 +17,17 @@ const useTableHuruf = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/contents", {
-        method: "GET",
+      // --- PERUBAHAN: Gunakan api.get ---
+      const response = await api.get("/contents", {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         const filtered = result.data.filter((item) => item.category_id === 2);
-
         setDataHuruf(filtered);
       }
     } catch (error) {
@@ -47,31 +48,29 @@ const useTableHuruf = () => {
     setIsSyncing(true);
 
     try {
-      const response = await fetch(
-        "/api/contents/bulk-import",
+      // --- PERUBAHAN: Gunakan api.post ---
+      const response = await api.post(
+        "/contents/bulk-import",
+        { category_id: 2 }, // Body JSON langsung dikirim
         {
-          method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${authData?.token}`,
           },
-          body: JSON.stringify({ category_id: 2 }),
         },
       );
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert(result.message);
-
         fetchHuruf();
       } else {
         alert(result.message || "Gagal sync data");
       }
     } catch (error) {
       console.error(error);
-
-      alert("Server error saat sync");
+      const errMsg = error.response?.data?.message || "Server error saat sync";
+      alert(errMsg);
     } finally {
       setIsSyncing(false);
     }
@@ -86,26 +85,26 @@ const useTableHuruf = () => {
     if (!confirm) return;
 
     try {
-      const response = await fetch(`/api/contents/${id}`, {
-        method: "DELETE",
+      // --- PERUBAHAN: Gunakan api.delete ---
+      const response = await api.delete(`/contents/${id}`, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
         },
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok) {
+      if (result.success) {
         alert("Berhasil dihapus");
-
         fetchHuruf();
       } else {
         alert(result.message || "Gagal hapus data");
       }
     } catch (error) {
       console.error(error);
-
-      alert("Server error saat delete");
+      const errMsg =
+        error.response?.data?.message || "Server error saat delete";
+      alert(errMsg);
     }
   };
 

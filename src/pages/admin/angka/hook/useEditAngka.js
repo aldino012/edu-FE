@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+// IMPORT FILE AXIOS KITA DI SINI SESUAI PATH KAMU
+import api from "../.././../../api/axios";
+
 const useEditAngka = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -25,33 +28,32 @@ const useEditAngka = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await fetch(
-          `/api/contents/${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authData?.token}`,
-            },
+        // --- PERUBAHAN: Gunakan api.get dan hilangkan awalan /api ---
+        const response = await api.get(`/contents/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authData?.token}`,
           },
-        );
+        });
 
-        const result = await response.json();
+        // Axios otomatis menaruh JSON response di dalam .data
+        const result = response.data;
 
-        if (response.ok && result.success) {
+        if (result.success) {
           setFormData({
             value: result.data.value,
             label: result.data.label,
           });
         } else {
           alert("Gagal ambil data");
-
           navigate("/admin/angka/table");
         }
       } catch (error) {
         console.error(error);
-
-        alert("Server error saat fetch data");
+        // Menangkap pesan error spesifik jika ada
+        const errMsg =
+          error.response?.data?.message || "Server error saat fetch data";
+        alert(errMsg);
+        navigate("/admin/angka/table");
       } finally {
         setIsFetching(false);
       }
@@ -79,27 +81,27 @@ const useEditAngka = () => {
     }
 
     try {
-      const response = await fetch(`/api/contents/${id}`, {
-        method: "PUT",
+      // --- PERUBAHAN: Gunakan api.put dan hilangkan awalan /api ---
+      const response = await api.put(`/contents/${id}`, submitData, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
+          // Content-Type multipart/form-data otomatis di-handle oleh Axios
         },
-        body: submitData,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert("Data angka berhasil diupdate!");
-
         navigate("/admin/angka/table");
       } else {
         alert(result.message || "Gagal update data");
       }
     } catch (error) {
       console.error(error);
-
-      alert("Server error saat update");
+      const errMsg =
+        error.response?.data?.message || "Server error saat update";
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "/api";
+// IMPORT FILE AXIOS KITA
+import api from "../.././../../api/axios";
 
 export const useEditQuiz = (id) => {
   const [dataContents, setDataContents] = useState([]);
@@ -27,25 +28,26 @@ export const useEditQuiz = (id) => {
       try {
         const authData = JSON.parse(localStorage.getItem("admin_auth"));
         const headers = {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         };
 
+        // --- PERUBAHAN: Gunakan Promise.all dengan api.get ---
         const [quizRes, contentRes] = await Promise.all([
-          fetch(`${API_URL}/quizzes/${id}`, { headers }),
-          fetch(`${API_URL}/contents`, { headers }),
+          api.get(`/quizzes/${id}`, { headers }),
+          api.get(`/contents`, { headers }),
         ]);
 
-        const quizResult = await quizRes.json();
-        const contentResult = await contentRes.json();
+        // Axios menaruh respon JSON di dalam .data
+        const quizResult = quizRes.data;
+        const contentResult = contentRes.data;
 
-        if (!contentRes.ok || !contentResult.success) {
+        if (!contentResult.success) {
           throw new Error("Failed load contents");
         }
 
         setDataContents(contentResult.data);
 
-        if (quizRes.ok && quizResult.success) {
+        if (quizResult.success) {
           const quiz = quizResult.data;
 
           const findId = (label) => {
@@ -66,8 +68,10 @@ export const useEditQuiz = (id) => {
           throw new Error("Quiz not found");
         }
       } catch (err) {
-        console.error(err);
-        alert("Gagal mengambil data quiz");
+        console.error("Fetch data error:", err);
+        const errMsg =
+          err.response?.data?.message || "Gagal mengambil data quiz";
+        alert(errMsg);
       } finally {
         setIsLoading(false);
       }
@@ -107,26 +111,25 @@ export const useEditQuiz = (id) => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_URL}/quizzes/${id}`, {
-        method: "PUT",
+      // --- PERUBAHAN: Gunakan api.put ---
+      const res = await api.put(`/quizzes/${id}`, payload, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${authData?.token}`,
         },
-        body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
+      const result = res.data;
 
-      if (res.ok && result.success) {
+      if (result.success) {
         alert("Quiz berhasil diupdate");
         navigate("/admin/quiz/table");
       } else {
         alert(result.message || "Gagal update quiz");
       }
     } catch (err) {
-      console.error(err);
-      alert("Server error");
+      console.error("Update quiz error:", err);
+      const errMsg = err.response?.data?.message || "Server error";
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }

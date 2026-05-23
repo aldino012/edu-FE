@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// IMPORT FILE AXIOS
+import api from "../.././../../api/axios";
+
 // Kamus otomatis untuk label huruf
 const kamusHuruf = {
   A: "Ayam",
@@ -87,27 +90,27 @@ const useAddHuruf = () => {
     }
 
     try {
-      const response = await fetch("/api/contents", {
-        method: "POST",
+      // --- PERUBAHAN UTAMA: MENGGUNAKAN AXIOS ---
+      const response = await api.post("/contents", submitData, {
         headers: {
           Authorization: `Bearer ${authData?.token}`,
+          // Content-Type untuk file otomatis diatur Axios
         },
-        body: submitData,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok && result.success) {
+      if (result.success) {
         alert("Data berhasil disimpan!");
-
         navigate("/admin/huruf/table");
       } else {
         alert(result.message || "Gagal menyimpan data");
       }
     } catch (error) {
       console.error("Error simpan data:", error);
-
-      alert("Terjadi kesalahan pada server.");
+      const errMsg =
+        error.response?.data?.message || "Terjadi kesalahan pada server.";
+      alert(errMsg);
     } finally {
       setIsLoading(false);
     }
