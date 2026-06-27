@@ -4,6 +4,10 @@ import Card from "../../../components/Card";
 import Button from "../../../components/Button";
 import { FaRedo } from "react-icons/fa";
 
+// URL Supabase untuk folder 'images' di dalam bucket 'assets-fe'
+const SUPABASE_BUCKET_URL =
+  "https://ruvbopxooqgscpwadipr.supabase.co/storage/v1/object/public/assets-fe/images";
+
 const QuizResult = ({ score, isPerfect, onPlayAgain, onBack }) => {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center p-8 w-full h-full">
@@ -11,7 +15,12 @@ const QuizResult = ({ score, isPerfect, onPlayAgain, onBack }) => {
         {/* Bagian GIF dan Pesan */}
         <div className="flex flex-col items-center mb-6 w-full">
           <img
-            src={isPerfect ? "/images/k-senang.gif" : "/images/sedih.gif"}
+            // PERUBAHAN: Menggunakan URL Supabase untuk kedua kondisi gambar
+            src={
+              isPerfect
+                ? `${SUPABASE_BUCKET_URL}/k-senang.webp`
+                : `${SUPABASE_BUCKET_URL}/sedih.webp`
+            }
             alt={isPerfect ? "Senang" : "Sedih"}
             className="w-44 h-44 object-contain mb-6 drop-shadow-xl animate-bounce"
           />

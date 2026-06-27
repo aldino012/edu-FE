@@ -2,11 +2,24 @@ import React, { useMemo } from "react";
 import { FaStar, FaCircle, FaHeart, FaSmile } from "react-icons/fa";
 import { LuRainbow, LuFlower } from "react-icons/lu";
 
+// URL Supabase untuk folder 'images' di dalam bucket 'assets-fe'
+const SUPABASE_BUCKET_URL =
+  "https://ruvbopxooqgscpwadipr.supabase.co/storage/v1/object/public/assets-fe/images";
+
 const BackgroundDecorations = () => {
   // Membuat partikel acak (Pelangi, Bintang, Lingkaran) yang tersebar di background
   const particles = useMemo(() => {
     const items = [];
-    const types = ["rainbow", "star", "heart", "flower", "smile", "dot", "dot", "dot"];
+    const types = [
+      "rainbow",
+      "star",
+      "heart",
+      "flower",
+      "smile",
+      "dot",
+      "dot",
+      "dot",
+    ];
     for (let i = 0; i < 50; i++) {
       items.push({
         id: i,
@@ -26,26 +39,28 @@ const BackgroundDecorations = () => {
   return (
     <>
       {/* GRADIENT BACKGROUND UTAMA */}
-      <div 
+      <div
         className="fixed inset-0 z-0"
         style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
+          background:
+            "linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)",
           backgroundSize: "200% 200%",
           animation: "gradientShift 10s ease infinite",
         }}
       />
 
       {/* SOFT OVERLAY AGAR TIDAK TERLALU TERANG */}
-      <div 
+      <div
         className="fixed inset-0 z-0"
         style={{
-          background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.15) 100%)",
+          background:
+            "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.15) 100%)",
           pointerEvents: "none",
         }}
       />
 
       {/* CUTE PATTERN OVERLAY (Polkadot) */}
-      <div 
+      <div
         className="fixed inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `
@@ -90,7 +105,7 @@ const BackgroundDecorations = () => {
       <div
         className="absolute inset-0 pointer-events-none z-10"
         style={{
-          backgroundImage: "url('/images/rumput3.png')",
+          backgroundImage: `url('${SUPABASE_BUCKET_URL}/rumput3.png')`,
           backgroundRepeat: "no-repeat",
           backgroundPosition: "bottom center",
           backgroundSize: "100% auto",
@@ -99,38 +114,38 @@ const BackgroundDecorations = () => {
 
       {/* 3. LAYER ASET LINGKUNGAN (Z-20 & Z-30) */}
       <img
-        src="/images/bunga-w.png"
+        src={`${SUPABASE_BUCKET_URL}/bunga-w.png`}
         alt="Bunga"
         className="absolute bottom-8 left-8 w-32 z-30 pointer-events-none"
       />
       <img
-        src="/images/unicorn.png"
+        src={`${SUPABASE_BUCKET_URL}/unicorn.png`}
         alt="Unicorn"
         className="absolute bottom-8 left-1/3 w-56 z-20 pointer-events-none"
       />
       <div className="absolute bottom-8 right-8 w-[500px] h-[300px] pointer-events-none z-20">
         <img
-          src="/images/semanggi.png"
+          src={`${SUPABASE_BUCKET_URL}/semanggi.png`}
           alt="Semanggi 1"
           className="absolute right-[280px] bottom-4 w-16 z-10"
         />
         <img
-          src="/images/semanggi.png"
+          src={`${SUPABASE_BUCKET_URL}/semanggi.png`}
           alt="Semanggi 2"
           className="absolute right-[230px] bottom-8 w-12 z-10"
         />
         <img
-          src="/images/semanggi.png"
+          src={`${SUPABASE_BUCKET_URL}/semanggi.png`}
           alt="Semanggi 3"
           className="absolute right-[180px] bottom-2 w-16 z-10"
         />
         <img
-          src="/images/tong.png"
+          src={`${SUPABASE_BUCKET_URL}/tong.png`}
           alt="Tong Emas"
           className="absolute right-0 bottom-0 w-64 z-20"
         />
         <img
-          src="/images/lep.png"
+          src={`${SUPABASE_BUCKET_URL}/lep.png`}
           alt="Karakter Leprechaun"
           className="absolute right-[220px] bottom-0 w-36 z-30"
         />

@@ -6,6 +6,10 @@ import Button from "../../../components/Button";
 // Menggunakan BackButton Global
 import BackButton from "../../../components/BackButton";
 
+// URL Supabase untuk folder 'images' di dalam bucket 'assets-fe'
+const SUPABASE_BUCKET_URL =
+  "https://ruvbopxooqgscpwadipr.supabase.co/storage/v1/object/public/assets-fe/images";
+
 const QuizBoard = ({
   currentQuiz,
   currentIndex,
@@ -26,10 +30,9 @@ const QuizBoard = ({
       {/* HEADER NAV */}
       {/* Layout diubah menjadi justify-center karena tombol Back sudah fix/floating */}
       <div className="w-full flex items-center justify-center mb-6 pt-4">
-        
         {/* Memanggil Komponen Global */}
         <BackButton onClick={onBack} />
-        
+
         <div className="bg-white/40 px-6 py-3 rounded-full shadow-sm backdrop-blur-sm border-2 border-white/50">
           <Text className="text-slate-700 font-black text-xl tracking-wider uppercase">
             Soal {currentIndex + 1} / {totalQuestions}
@@ -47,7 +50,12 @@ const QuizBoard = ({
               }`}
             >
               <img
-                src={isCorrect ? "/images/senang.gif" : "/images/sedih.gif"}
+                // PERUBAHAN: Menggunakan URL Supabase untuk gambar respons
+                src={
+                  isCorrect
+                    ? `${SUPABASE_BUCKET_URL}/senang.webp`
+                    : `${SUPABASE_BUCKET_URL}/sedih.webp`
+                }
                 alt={isCorrect ? "Benar" : "Salah"}
                 className="w-40 h-40 object-contain drop-shadow-2xl"
               />
@@ -112,7 +120,7 @@ const QuizBoard = ({
             if (val.image_url && val.image_url.trim() !== "") {
               displayVisual = (
                 <img
-                  src={val.image_url}
+                  src={val.image_url} // Asumsi image_url dari database sudah berupa full URL Supabase
                   alt={val.label}
                   className="w-28 h-28 object-contain mb-2 pointer-events-none drop-shadow-md"
                 />

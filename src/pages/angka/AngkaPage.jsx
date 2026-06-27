@@ -14,6 +14,10 @@ import { useAngkaAudio } from "./hooks/useAngkaAudio";
 import AngkaGrid from "./components/AngkaGrid";
 import { mathPattern } from "./constants/angkaConstants";
 
+// URL Supabase untuk folder 'images' di dalam bucket 'assets-fe'
+const SUPABASE_BUCKET_URL =
+  "https://ruvbopxooqgscpwadipr.supabase.co/storage/v1/object/public/assets-fe/images";
+
 const AngkaPage = ({ onBack }) => {
   const navigate = useNavigate();
 
@@ -23,12 +27,12 @@ const AngkaPage = ({ onBack }) => {
   // PAGINATION GLOBAL
   // PERUBAHAN: Hapus parameter itemsPerPage (sudah diatur di dalam hook usePagination)
   // Kita alias-kan currentItems menjadi currentCards agar sesuai dengan props AngkaGrid
-  const { 
-    currentPage, 
-    totalPages, 
-    currentItems: currentCards, 
-    nextPage, 
-    prevPage 
+  const {
+    currentPage,
+    totalPages,
+    currentItems: currentCards,
+    nextPage,
+    prevPage,
   } = usePagination(fullAngkaList); // ← Hapus ", 6"
 
   // AUDIO
@@ -120,25 +124,54 @@ const AngkaPage = ({ onBack }) => {
 
       {/* DECORATION BOTTOM */}
       <div className="absolute bottom-[6vh] left-0 w-full px-[4%] flex items-end justify-between z-20 pointer-events-none">
-        <img src="/images/guru.png" className="h-[35vh]" alt="Guru" />
+        <img
+          src={`${SUPABASE_BUCKET_URL}/guru.png`}
+          className="h-[35vh]"
+          alt="Guru"
+        />
 
         <div className="flex items-end gap-2 md:gap-6 lg:gap-10">
-          <img src="/images/anak-1.png" className="h-[22vh]" alt="Anak 1" />
-          <img src="/images/anak-2.png" className="h-[23vh]" alt="Anak 2" />
-          <img src="/images/anak-3.png" className="h-[21vh]" alt="Anak 3" />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/anak-1.png`}
+            className="h-[22vh]"
+            alt="Anak 1"
+          />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/anak-2.png`}
+            className="h-[23vh]"
+            alt="Anak 2"
+          />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/anak-3.png`}
+            className="h-[21vh]"
+            alt="Anak 3"
+          />
         </div>
 
         <div className="flex items-end gap-2 md:gap-4">
-          <img src="/images/buku-1.png" className="h-[10vh]" alt="Buku 1" />
-          <img src="/images/buku-2.png" className="h-[13vh]" alt="Buku 2" />
-          <img src="/images/buku-3.png" className="h-[9vh]" alt="Buku 3" />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/buku-1.png`}
+            className="h-[10vh]"
+            alt="Buku 1"
+          />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/buku-2.png`}
+            className="h-[13vh]"
+            alt="Buku 2"
+          />
+          <img
+            src={`${SUPABASE_BUCKET_URL}/buku-3.png`}
+            className="h-[9vh]"
+            alt="Buku 3"
+          />
         </div>
       </div>
 
       {/* FLOOR */}
+      {/* Perhatikan penulisan background-image yang menggunakan template literal backtick */}
       <div
         className="absolute bottom-0 left-0 w-full h-[24vh] bg-cover bg-bottom bg-no-repeat z-10 pointer-events-none"
-        style={{ backgroundImage: "url('/images/lantai.png')" }}
+        style={{ backgroundImage: `url('${SUPABASE_BUCKET_URL}/lantai.png')` }}
       />
     </div>
   );

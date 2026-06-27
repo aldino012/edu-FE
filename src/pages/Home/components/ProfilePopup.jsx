@@ -1,17 +1,21 @@
 // src/Home/components/ProfilePopup.jsx
 import { useState } from "react";
 
+// URL Supabase untuk folder 'images' di dalam bucket 'assets-fe'
+const SUPABASE_BUCKET_URL =
+  "https://ruvbopxooqgscpwadipr.supabase.co/storage/v1/object/public/assets-fe/images";
+
 export default function ProfilePopup({ onSave }) {
   const [name, setName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState("Avatar1.png");
 
-    const avatars = [
-      "Avatar1.png",
-      "Avatar2.png",
-      "Avatar3.png",
-      "Avatar4.png",
-      "Avatar5.png",
-    ];
+  const avatars = [
+    "Avatar1.png",
+    "Avatar2.png",
+    "Avatar3.png",
+    "Avatar4.png",
+    "Avatar5.png",
+  ];
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -20,7 +24,8 @@ export default function ProfilePopup({ onSave }) {
     }
     const userData = {
       name: name,
-      avatar: `/images/${selectedAvatar}`,
+      // PERUBAHAN: Simpan URL penuh ke dalam state/localStorage
+      avatar: `${SUPABASE_BUCKET_URL}/${selectedAvatar}`,
     };
 
     localStorage.setItem("userProfile", JSON.stringify(userData));
@@ -42,7 +47,8 @@ export default function ProfilePopup({ onSave }) {
             return (
               <img
                 key={av}
-                src={`/images/${av}`}
+                // PERUBAHAN: Gunakan URL Supabase untuk me-render pilihan avatar
+                src={`${SUPABASE_BUCKET_URL}/${av}`}
                 alt="Avatar"
                 onClick={() => setSelectedAvatar(av)}
                 className={`w-20 h-20 rounded-full cursor-pointer border-4 bg-sky-50 object-cover transition-all duration-200 transform hover:scale-110 ${
