@@ -10,13 +10,23 @@ import { menus } from "../constants/menus";
 const HomeMenu = () => {
   const navigate = useNavigate();
 
+  // Handler untuk navigasi menu
+  const handleMenuClick = (menu) => {
+    // Jika menu disabled, jangan lakukan apa-apa
+    if (menu.isDisabled) return;
+
+    // Navigasi menggunakan property path jika ada, fallback ke /${menu.id}
+    const targetPath = menu.path || `/${menu.id}`;
+    navigate(targetPath);
+  };
+
   return (
     <div className="flex flex-wrap justify-center gap-8 z-20 relative px-4">
       {menus.map((menu) => (
         <Card
           key={menu.id}
           // Cek jika nonaktif, jangan jalankan navigasi
-          onClick={() => !menu.isDisabled && navigate(`/${menu.id}`)}
+          onClick={() => handleMenuClick(menu)}
           className="!p-0 !bg-transparent border-none shadow-none"
         >
           <div
@@ -25,20 +35,23 @@ const HomeMenu = () => {
             className={`
               ${menu.bgColor} ${menu.shadow} 
               flex flex-col items-center justify-center p-6 w-48 h-48 rounded-[2rem] shadow-xl border-4 border-white/90 transform transition-all duration-300 relative
-              ${menu.isDisabled 
-                ? "opacity-60 cursor-not-allowed grayscale" // Style jika nonaktif (redup)
-                : "hover:scale-110 hover:-translate-y-3 cursor-pointer group" // Style jika aktif
+              ${
+                menu.isDisabled
+                  ? "opacity-60 cursor-not-allowed grayscale" // Style jika nonaktif (redup)
+                  : "hover:scale-110 hover:-translate-y-3 cursor-pointer group" // Style jika aktif
               }
             `}
           >
             {/* Bagian Icon */}
-            <div className={`transform transition-transform duration-300 ${!menu.isDisabled && "group-hover:-translate-y-2 group-hover:rotate-12"}`}>
+            <div
+              className={`transform transition-transform duration-300 ${!menu.isDisabled && "group-hover:-translate-y-2 group-hover:rotate-12"}`}
+            >
               {menu.icon}
             </div>
 
             {/* Bagian Judul Text */}
             <Text
-              textKey={menu.id === 'membaca' ? menu.textKey : menu.textKey} // Jika pakai i18n, pastikan key-nya aman
+              textKey={menu.textKey}
               variant="subtitle"
               align="center"
               // Tambahkan leading-tight agar jarak antar baris tidak terlalu jauh jika teks turun ke bawah

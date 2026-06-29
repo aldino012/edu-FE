@@ -12,6 +12,7 @@ import HurufPage from "./pages/huruf/HurufPage";
 import AngkaPage from "./pages/angka/AngkaPage";
 import WarnaPage from "./pages/warna/WarnaPage";
 import QuizPage from "./pages/quiz/QuizPage";
+import Partgame from "./pages/partgame/Partgame"; // ✅ TAMBAHAN BARU
 
 // Pages Admin & Auth
 import AdminLogin from "./pages/admin/login";
@@ -57,11 +58,11 @@ function App() {
           <Route path="/angka" element={<AngkaPage />} />
           <Route path="/warna" element={<WarnaPage />} />
           <Route path="/quiz" element={<QuizPage />} />
-
+          <Route path="/partgame" element={<Partgame />} />{" "}
+          {/* ✅ TAMBAHAN BARU */}
           {/* ================= AUTH ROUTES ================= */}
           {/* Halaman login admin sebelum masuk ke dashboard */}
           <Route path="/admin/login" element={<AdminLogin />} />
-
           {/* ================= ADMIN ROUTES (Protected) ================= */}
           {/* Semua route di dalam element ProtectedRoute akan dicek tokennya */}
           <Route element={<ProtectedRoute />}>
@@ -101,7 +102,6 @@ function App() {
               </Route>
             </Route>
           </Route>
-
           {/* Fallback jika URL tidak dikenal, lempar ke Home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

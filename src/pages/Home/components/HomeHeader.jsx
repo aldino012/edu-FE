@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 import Text from "../../../components/Text";
@@ -6,26 +6,8 @@ import Text from "../../../components/Text";
 const HomeHeader = ({ audioRef, isPlaying, toggleAudio, userProfile }) => {
   const navigate = useNavigate();
 
-  // State dan Ref untuk fitur Secret Click
-  const [clickCount, setClickCount] = useState(0);
-  const timeoutRef = useRef(null);
-
-  const handleSecretClick = () => {
-    const newCount = clickCount + 1;
-    setClickCount(newCount);
-
-    if (newCount >= 5) {
-      setClickCount(0);
-      navigate("/admin"); // Langsung pindah ke admin
-    }
-
-    // Reset hitungan jika tidak ada klik lanjutan dalam 2 detik
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setClickCount(0);
-    }, 2000);
+  const goToAdmin = () => {
+    navigate("/admin");
   };
 
   return (
@@ -42,7 +24,18 @@ const HomeHeader = ({ audioRef, isPlaying, toggleAudio, userProfile }) => {
         )}
       </button>
 
-      {/* ================= PROFIL USER (Pengganti Tombol Admin) ================= */}
+      {/* ================= TOMBOL RAHASIA (MENYATU BACKGROUND) ================= */}
+      <button
+        onClick={goToAdmin}
+        className="
+          absolute top-0 right-0 z-40
+          w-12 h-12
+          bg-transparent
+          cursor-pointer
+        "
+      ></button>
+
+      {/* ================= PROFIL USER ================= */}
       <div className="absolute top-6 right-6 z-30 bg-white/90 p-2 pr-5 rounded-full shadow-md flex items-center gap-3 border-4 border-white transition-all duration-300 hover:shadow-lg">
         {userProfile ? (
           <>
@@ -67,12 +60,8 @@ const HomeHeader = ({ audioRef, isPlaying, toggleAudio, userProfile }) => {
         )}
       </div>
 
-      {/* ================= JUDUL (Terpasang Secret Click) ================= */}
-      {/* Tambahkan cursor-default dan select-none agar saat diklik berkali-kali teks tidak ter-highlight */}
-      <div
-        className="mb-14 z-20 relative mt-10 cursor-default select-none"
-        onClick={handleSecretClick}
-      >
+      {/* ================= JUDUL ================= */}
+      <div className="mb-14 z-20 relative mt-10">
         <Text
           textKey="title_main"
           variant="title"

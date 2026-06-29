@@ -7,7 +7,7 @@ import HomeAudio from "./components/HomeAudio";
 import HomeHeader from "./components/HomeHeader";
 import HomeDecorations from "./components/HomeDecorations";
 import HomeMenu from "./components/HomeMenu";
-import ProfilePopup from "./components/ProfilePopup"; // Import komponen baru
+import ProfilePopup from "./components/ProfilePopup";
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -53,6 +53,7 @@ const Homepage = () => {
       <HomeDecorations />
 
       {/* Menu Navigasi Utama */}
+      {/* HomeMenu akan menangani navigasi ke /huruf, /partgame, /angka, /warna, /quiz */}
       <HomeMenu />
     </div>
   );
