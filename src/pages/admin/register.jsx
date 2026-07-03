@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import Text from "../../components/Text";
 import Button from "../../components/Button";
+import { API_BASE_URL } from "../../config/api"; // ✅ TAMBAH IMPORT INI
 import {
   FaStar,
   FaFont,
@@ -129,7 +130,8 @@ const AdminRegister = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
+      // ✅ GUNAKAN API_BASE_URL
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Text from "../../../components/Text";
 import Button from "../../../components/Button";
+import { API_BASE_URL } from "../../../config/api"; // ✅ TAMBAH IMPORT INI
 import {
   FaShieldAlt,
   FaCheckCircle,
@@ -11,7 +12,8 @@ import {
   FaLock,
 } from "react-icons/fa";
 
-const API_URL = "http://localhost:3000/api/auth";
+// ✅ HAPUS: const API_URL = "http://localhost:3000/api/auth";
+// ✅ GUNAKAN: API_BASE_URL dari config
 
 const SecuritySettingsPage = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -35,7 +37,8 @@ const SecuritySettingsPage = () => {
 
   const checkTwoFactorStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/2fa/status`, {
+      // ✅ GUNAKAN API_BASE_URL
+      const response = await fetch(`${API_BASE_URL}/2fa/status`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -67,7 +70,8 @@ const SecuritySettingsPage = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/2fa/disable`, {
+      // ✅ GUNAKAN API_BASE_URL
+      const response = await fetch(`${API_BASE_URL}/2fa/disable`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
