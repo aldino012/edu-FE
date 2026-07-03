@@ -48,6 +48,7 @@ const useTableApproval = () => {
         throw new Error("Token tidak ditemukan. Silakan login ulang.");
       }
 
+      // ✅ axiosInstance sudah memiliki baseURL, jadi cukup gunakan path relatif
       const response = await axiosInstance.get("/auth/pending-admins", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,6 +92,7 @@ const useTableApproval = () => {
         throw new Error("Token tidak ditemukan. Silakan login ulang.");
       }
 
+      // ✅ axiosInstance sudah memiliki baseURL, jadi cukup gunakan path relatif
       const response = await axiosInstance.get("/auth/approved-admins", {
         headers: {
           Authorization: `Bearer ${token}`,

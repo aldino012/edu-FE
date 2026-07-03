@@ -88,11 +88,47 @@ const AdminLogin = () => {
         }
 
         if (session) {
+          // ✅ PERBAIKAN: Cek apakah profile ada
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role, is_approved, full_name")
             .eq("id", session.user.id)
             .single();
+
+          // ✅ Jika profile tidak ada (error code PGRST116 = no rows), buat profile baru
+          if (profileError && profileError.code === "PGRST116") {
+            console.log(
+              "⚠️ Profile tidak ada, membuat profile baru untuk user Google...",
+            );
+
+            const fullName =
+              session.user.user_metadata?.full_name ||
+              session.user.email.split("@")[0];
+
+            const { error: insertError } = await supabase
+              .from("profiles")
+              .insert({
+                id: session.user.id,
+                full_name: fullName,
+                role: "pending_admin",
+                is_approved: false,
+              });
+
+            if (insertError) {
+              console.error("Error creating profile:", insertError);
+              setError("Gagal membuat profil user");
+              await supabase.auth.signOut();
+              return;
+            }
+
+            // Setelah profile dibuat, tampilkan halaman pending
+            setPendingUser({
+              email: session.user.email,
+              full_name: fullName,
+            });
+            await supabase.auth.signOut();
+            return;
+          }
 
           if (profileError) {
             console.error("Profile error:", profileError);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Text from "../../../components/Text";
 import Button from "../../../components/Button";
-import { API_BASE_URL } from "../../../api/axios";
+import { API_BASE_URL } from "../../../api/axios"; // ✅ Import dari axios.js
 import {
   FaShieldAlt,
   FaCheckCircle,
@@ -11,9 +11,6 @@ import {
   FaTrash,
   FaLock,
 } from "react-icons/fa";
-
-// ✅ HAPUS: const API_URL = "http://localhost:3000/api/auth";
-// ✅ GUNAKAN: API_BASE_URL dari config
 
 const SecuritySettingsPage = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -30,15 +27,14 @@ const SecuritySettingsPage = () => {
     return authData.token;
   };
 
-  // Cek status 2FA saat halaman dibuka
   useEffect(() => {
     checkTwoFactorStatus();
   }, []);
 
   const checkTwoFactorStatus = async () => {
     try {
-      // ✅ GUNAKAN API_BASE_URL
-      const response = await fetch(`${API_BASE_URL}/2fa/status`, {
+      // ✅ PERBAIKAN: Tambahkan /auth/ sebelum /2fa/status
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/status`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -57,7 +53,6 @@ const SecuritySettingsPage = () => {
     }
   };
 
-  // Handle disable 2FA
   const handleDisable2FA = async (e) => {
     e.preventDefault();
     setDisabling(true);
@@ -70,8 +65,8 @@ const SecuritySettingsPage = () => {
     }
 
     try {
-      // ✅ GUNAKAN API_BASE_URL
-      const response = await fetch(`${API_BASE_URL}/2fa/disable`, {
+      // ✅ PERBAIKAN: Tambahkan /auth/ sebelum /2fa/disable
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/disable`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

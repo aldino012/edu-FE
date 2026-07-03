@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Text from "../../../components/Text";
 import Button from "../../../components/Button";
-import { API_BASE_URL } from "../../../api/axios";
+import { API_BASE_URL } from "../../../api/axios"; // ✅ Import dari axios.js
 import {
   FaQrcode,
   FaKey,
@@ -12,11 +12,8 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 
-// ✅ HAPUS: const API_URL = "http://localhost:3000/api/auth";
-// ✅ GUNAKAN: API_BASE_URL dari config
-
 const TwoFactorSetupPage = () => {
-  const [step, setStep] = useState(1); // 1: Generate QR, 2: Verify Code
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [secret, setSecret] = useState("");
@@ -25,20 +22,18 @@ const TwoFactorSetupPage = () => {
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  // Get token dari localStorage
   const getToken = () => {
     const authData = JSON.parse(localStorage.getItem("admin_auth") || "{}");
     return authData.token;
   };
 
-  // Step 1: Generate QR Code
   const handleGenerateQR = async () => {
     setLoading(true);
     setError("");
 
     try {
-      // ✅ GUNAKAN API_BASE_URL
-      const response = await fetch(`${API_BASE_URL}/2fa/setup`, {
+      // ✅ PERBAIKAN: Tambahkan /auth/ sebelum /2fa/setup
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/setup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,7 +57,6 @@ const TwoFactorSetupPage = () => {
     }
   };
 
-  // Step 2: Verify Code
   const handleVerifyCode = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -75,8 +69,8 @@ const TwoFactorSetupPage = () => {
     }
 
     try {
-      // ✅ GUNAKAN API_BASE_URL
-      const response = await fetch(`${API_BASE_URL}/2fa/verify-setup`, {
+      // ✅ PERBAIKAN: Tambahkan /auth/ sebelum /2fa/verify-setup
+      const response = await fetch(`${API_BASE_URL}/auth/2fa/verify-setup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,7 +99,6 @@ const TwoFactorSetupPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-300 via-indigo-200 to-purple-300 p-6">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => navigate("/admin/security")}
@@ -128,7 +121,6 @@ const TwoFactorSetupPage = () => {
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-rose-100 text-rose-600 text-sm font-bold p-4 rounded-2xl mb-4 flex items-center gap-2">
                 <FaExclamationTriangle />
@@ -136,7 +128,6 @@ const TwoFactorSetupPage = () => {
               </div>
             )}
 
-            {/* Success Message */}
             {success && (
               <div className="bg-green-100 text-green-600 text-sm font-bold p-4 rounded-2xl mb-4 flex items-center gap-2">
                 <FaCheckCircle />
@@ -144,7 +135,6 @@ const TwoFactorSetupPage = () => {
               </div>
             )}
 
-            {/* STEP 1: Generate QR */}
             {step === 1 && (
               <div className="text-center space-y-6">
                 <div>
@@ -178,7 +168,6 @@ const TwoFactorSetupPage = () => {
               </div>
             )}
 
-            {/* STEP 2: Scan QR + Verify */}
             {step === 2 && (
               <div className="space-y-6">
                 <div className="text-center">
@@ -191,7 +180,6 @@ const TwoFactorSetupPage = () => {
                   </p>
                 </div>
 
-                {/* QR Code Display */}
                 <div className="bg-white p-6 rounded-2xl border-2 border-slate-200 flex justify-center">
                   {qrCode ? (
                     <img src={qrCode} alt="QR Code 2FA" className="w-64 h-64" />
@@ -202,7 +190,6 @@ const TwoFactorSetupPage = () => {
                   )}
                 </div>
 
-                {/* Manual Entry Key */}
                 <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <FaKey className="text-amber-600" />
@@ -218,7 +205,6 @@ const TwoFactorSetupPage = () => {
                   </p>
                 </div>
 
-                {/* Verify Code Form */}
                 <form onSubmit={handleVerifyCode} className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-600 mb-2">
@@ -228,7 +214,6 @@ const TwoFactorSetupPage = () => {
                       type="text"
                       value={code}
                       onChange={(e) => {
-                        // Hanya izinkan angka dan max 6 digit
                         const value = e.target.value
                           .replace(/\D/g, "")
                           .slice(0, 6);
