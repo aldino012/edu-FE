@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Text from "../../../components/Text";
 import Button from "../../../components/Button";
-import { API_BASE_URL } from "../../../config/api"; // ✅ TAMBAH IMPORT INI
+import { API_BASE_URL } from "../../../api/axios";
 import {
   FaShieldAlt,
   FaCheckCircle,
