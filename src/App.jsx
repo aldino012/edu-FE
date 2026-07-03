@@ -12,11 +12,13 @@ import HurufPage from "./pages/huruf/HurufPage";
 import AngkaPage from "./pages/angka/AngkaPage";
 import WarnaPage from "./pages/warna/WarnaPage";
 import QuizPage from "./pages/quiz/QuizPage";
-import Partgame from "./pages/partgame/Partgame"; // ✅ TAMBAHAN BARU
+import Partgame from "./pages/partgame/Partgame";
 
 // Pages Admin & Auth
 import AdminLogin from "./pages/admin/login";
+import AdminRegister from "./pages/admin/register";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SuperAdminRoute from "./components/SuperAdminRoute"; // ✅ TAMBAH: Import SuperAdminRoute
 
 // ============================================
 // IMPORT ADMIN LAYOUTS & SUB-PAGES (MODULAR)
@@ -47,6 +49,13 @@ import TableQuiz from "./pages/admin/quiz/table/page";
 import AddQuiz from "./pages/admin/quiz/add/page";
 import EditQuiz from "./pages/admin/quiz/edit/page";
 
+// --- MODUL 2FA / SECURITY ---
+import SecuritySettingsPage from "./pages/admin/twoFactor/SecurityPage";
+import TwoFactorSetupPage from "./pages/admin/twoFactor/SetupPage";
+
+// --- MODUL APPROVAL (Super Admin) ---
+import ApprovalPage from "./pages/admin/approval/page";
+
 function App() {
   return (
     <Router>
@@ -58,20 +67,17 @@ function App() {
           <Route path="/angka" element={<AngkaPage />} />
           <Route path="/warna" element={<WarnaPage />} />
           <Route path="/quiz" element={<QuizPage />} />
-          <Route path="/partgame" element={<Partgame />} />{" "}
-          {/* ✅ TAMBAHAN BARU */}
+          <Route path="/partgame" element={<Partgame />} />
+
           {/* ================= AUTH ROUTES ================= */}
-          {/* Halaman login admin sebelum masuk ke dashboard */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
+
           {/* ================= ADMIN ROUTES (Protected) ================= */}
-          {/* Semua route di dalam element ProtectedRoute akan dicek tokennya */}
           <Route element={<ProtectedRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
-              {/* Redirect otomatis ke menu huruf (table) saat pertama kali masuk admin */}
-              <Route
-                index
-                element={<Navigate to="/admin/huruf/table" replace />}
-              />
+              {/* Redirect otomatis ke menu angka saat pertama kali masuk admin */}
+              <Route index element={<Navigate to="/admin/angka" replace />} />
 
               {/* === MENU ADMIN ANGKA === */}
               <Route path="angka" element={<AdminAngka />}>
@@ -100,8 +106,37 @@ function App() {
                 <Route path="add" element={<AddQuiz />} />
                 <Route path="edit/:id" element={<EditQuiz />} />
               </Route>
+
+              {/* === MENU KEAMANAN (2FA) - Super Admin Only === */}
+              <Route
+                path="security"
+                element={
+                  <SuperAdminRoute>
+                    <SecuritySettingsPage />
+                  </SuperAdminRoute>
+                }
+              />
+              <Route
+                path="2fa/setup"
+                element={
+                  <SuperAdminRoute>
+                    <TwoFactorSetupPage />
+                  </SuperAdminRoute>
+                }
+              />
+
+              {/* === MENU APPROVAL - Super Admin Only === */}
+              <Route
+                path="approval"
+                element={
+                  <SuperAdminRoute>
+                    <ApprovalPage />
+                  </SuperAdminRoute>
+                }
+              />
             </Route>
           </Route>
+
           {/* Fallback jika URL tidak dikenal, lempar ke Home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

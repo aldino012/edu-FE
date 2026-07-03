@@ -11,13 +11,12 @@ import {
   FaPencilAlt,
   FaSmile,
   FaRocket,
+  FaUserPlus,
   FaGoogle,
   FaClock,
-  FaCheckCircle,
-  FaShieldAlt,
 } from "react-icons/fa";
 
-// Inisialisasi Supabase Client
+// Inisialisasi Supabase Client menggunakan environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -29,50 +28,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const AdminLogin = () => {
+const AdminRegister = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [pendingUser, setPendingUser] = useState(null);
-
-  // State untuk 2FA
-  const [need2FA, setNeed2FA] = useState(false);
-  const [tempId, setTempId] = useState("");
-  const [twoFACode, setTwoFACode] = useState("");
-  const [userData, setUserData] = useState(null);
-
+  const [success, setSuccess] = useState(false);
+  const [googleUser, setGoogleUser] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ BARU: Reset semua state saat component mount
-  useEffect(() => {
-    // Reset state 2FA saat halaman login dibuka
-    setNeed2FA(false);
-    setTempId("");
-    setTwoFACode("");
-    setUserData(null);
-    setError("");
+  // ✅ Validasi format email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-    // Cek apakah ada token lama di localStorage
-    const authData = localStorage.getItem("admin_auth");
-    if (authData) {
-      try {
-        const parsed = JSON.parse(authData);
-        // Jika token masih valid, redirect ke dashboard
-        if (parsed.token && parsed.expiry > Date.now()) {
-          navigate("/admin/huruf");
-        } else {
-          // Token expired, hapus
-          localStorage.removeItem("admin_auth");
-        }
-      } catch (err) {
-        localStorage.removeItem("admin_auth");
-      }
-    }
-  }, [navigate]);
-
-  // Handle callback dari Google OAuth
+  // Handle callback setelah redirect dari Google OAuth
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
@@ -87,176 +61,112 @@ const AdminLogin = () => {
         }
 
         if (session) {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from("profiles")
             .select("role, is_approved, full_name")
             .eq("id", session.user.id)
             .single();
 
-          if (profileError) {
-            console.error("Profile error:", profileError);
-            setError("Gagal memuat data profil");
-            return;
-          }
-
-          if (profile.role === "pending_admin" && !profile.is_approved) {
-            setPendingUser({
+          if (
+            profile &&
+            profile.role === "pending_admin" &&
+            !profile.is_approved
+          ) {
+            setGoogleUser({
               email: session.user.email,
               full_name: profile.full_name,
             });
+
             await supabase.auth.signOut();
             return;
           }
 
-          const now = new Date().getTime();
-          const authData = {
-            token: session.access_token,
-            user: {
-              id: session.user.id,
-              email: session.user.email,
-              full_name: profile.full_name,
-              role: profile.role,
-            },
-            expiry: now + 3600000,
-          };
-
-          localStorage.setItem("admin_auth", JSON.stringify(authData));
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname,
-          );
-          navigate("/admin/huruf");
+          await supabase.auth.signOut();
+          navigate("/admin/login");
         }
       } catch (err) {
         console.error("OAuth callback error:", err);
-        setError("Terjadi kesalahan saat memproses login");
       }
     };
 
     handleOAuthCallback();
   }, [navigate]);
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+
+    // ✅ Validasi input wajib
+    if (!fullName || !email || !password || !confirmPassword) {
+      setError("Semua field wajib diisi");
+      return;
+    }
+
+    // ✅ Validasi format email
+    if (!validateEmail(email)) {
+      setError("Format email tidak valid. Gunakan format: user@domain.com");
+      return;
+    }
+
+    // ✅ Validasi password minimal 6 karakter
+    if (password.length < 6) {
+      setError("Password minimal 6 karakter");
+      return;
+    }
+
+    // ✅ Validasi konfirmasi password
+    if (password !== confirmPassword) {
+      setError("Password dan konfirmasi password tidak cocok");
+      return;
+    }
+
+    // ✅ Validasi nama lengkap minimal 3 karakter
+    if (fullName.trim().length < 3) {
+      setError("Nama lengkap minimal 3 karakter");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      const response = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login gagal");
+        throw new Error(data.message || "Registrasi gagal");
       }
 
-      // CEK: Apakah butuh 2FA?
-      if (data.need_2fa) {
-        console.log("🔐 2FA required, showing verification form");
-        setNeed2FA(true);
-        setTempId(data.temp_id);
-        setUserData(data.user);
-        setLoading(false);
-        return;
-      }
-
-      // Login normal (tanpa 2FA)
-      console.log("✅ Login successful without 2FA");
-      const now = new Date().getTime();
-      const authData = {
-        token: data.token,
-        user: data.user,
-        expiry: now + 3600000,
-      };
-
-      localStorage.setItem("admin_auth", JSON.stringify(authData));
-      navigate("/admin/huruf");
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/admin/login");
+      }, 3000);
     } catch (err) {
-      setError(err.message || "Terjadi kesalahan saat login");
-      setEmail("");
-      setPassword("");
+      setError(err.message || "Terjadi kesalahan saat registrasi");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify2FA = async (e) => {
-    e.preventDefault();
+  const handleGoogleRegister = async () => {
     setError("");
-    setLoading(true);
-
-    if (!twoFACode || twoFACode.length !== 6) {
-      setError("Kode harus 6 digit");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log("🔐 Verifying 2FA code...");
-      const response = await fetch(
-        "http://localhost:3000/api/auth/2fa/verify",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            temp_id: tempId,
-            code: twoFACode,
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Kode 2FA tidak valid");
-      }
-
-      console.log("✅ 2FA verification successful");
-
-      // Simpan token final
-      const now = new Date().getTime();
-      const authData = {
-        token: data.token,
-        user: data.user,
-        expiry: now + 3600000,
-      };
-
-      localStorage.setItem("admin_auth", JSON.stringify(authData));
-
-      // Reset state 2FA
-      setNeed2FA(false);
-      setTempId("");
-      setTwoFACode("");
-      setUserData(null);
-
-      navigate("/admin/huruf");
-    } catch (err) {
-      setError(err.message || "Verifikasi 2FA gagal");
-      setTwoFACode("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError("");
-    setPendingUser(null);
     setGoogleLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + "/admin/login",
+          redirectTo: window.location.origin + "/admin/register",
         },
       });
 
@@ -264,7 +174,7 @@ const AdminLogin = () => {
         throw error;
       }
     } catch (err) {
-      setError(err.message || "Gagal memulai login dengan Google");
+      setError(err.message || "Gagal memulai pendaftaran dengan Google");
       setGoogleLoading(false);
     }
   };
@@ -326,8 +236,8 @@ const AdminLogin = () => {
     },
   ];
 
-  // Tampilan untuk user pending
-  if (pendingUser) {
+  // Tampilan untuk user Google yang baru daftar (pending approval)
+  if (googleUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-300 via-indigo-200 to-purple-300 flex items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -362,33 +272,48 @@ const AdminLogin = () => {
             </div>
 
             <p className="text-amber-700 text-sm mb-2">
-              Halo <strong>{pendingUser.full_name}</strong>!
+              Halo <strong>{googleUser.full_name}</strong>!
             </p>
+
             <p className="text-amber-700 text-sm">
-              Akun Anda dengan email <strong>{pendingUser.email}</strong> telah
-              terdaftar.
+              Akun Google Anda dengan email <strong>{googleUser.email}</strong>{" "}
+              telah terdaftar.
             </p>
+
             <p className="text-amber-700 text-sm mt-3 font-medium">
-              Akun Anda sedang menunggu persetujuan dari Super Admin.
+              Akun Anda sedang menunggu persetujuan dari Super Admin. Anda akan
+              mendapat notifikasi setelah akun disetujui.
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              setPendingUser(null);
-              navigate("/admin/login");
-            }}
-            className="w-full py-4 rounded-3xl font-black uppercase tracking-widest text-white text-base bg-gradient-to-r from-sky-400 to-blue-500"
-          >
-            Kembali ke Login
-          </button>
+          <div className="space-y-3">
+            <p className="text-slate-600 text-sm">
+              Silakan hubungi Super Admin untuk percepat proses persetujuan.
+            </p>
+
+            <button
+              onClick={() => {
+                setGoogleUser(null);
+                navigate("/admin/login");
+              }}
+              className="w-full py-4 rounded-3xl font-black uppercase tracking-widest text-white text-base transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/40 active:translate-y-1 active:shadow-none bg-gradient-to-r from-sky-400 to-blue-500"
+            >
+              Kembali ke Login
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
+              Sistem Edukasi Interaktif
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Tampilan 2FA Verification
-  if (need2FA) {
+  // Tampilan sukses untuk register manual
+  if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-300 via-indigo-200 to-purple-300 flex items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -405,76 +330,28 @@ const AdminLogin = () => {
           )}
         </div>
 
-        <div className="bg-white/95 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] w-full max-w-md border-4 border-white/80 relative z-10 animate-fade-in-up">
-          <div className="text-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-3xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-purple-500/40">
-              <FaShieldAlt className="text-white text-4xl" />
-            </div>
-            <h2 className="text-2xl font-black text-slate-800">
-              Verifikasi 2FA
-            </h2>
-            <p className="text-slate-500 text-sm mt-2">
-              Masukkan kode 6 digit dari Google Authenticator
-            </p>
-            <p className="text-slate-400 text-xs mt-1">
-              Login sebagai: {userData?.email}
-            </p>
+        <div className="bg-white/95 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] w-full max-w-md border-4 border-white/80 relative z-10 animate-fade-in-up text-center">
+          <div className="w-20 h-20 bg-gradient-to-tr from-green-400 to-emerald-400 rounded-3xl mx-auto mb-5 flex items-center justify-center shadow-lg shadow-green-400/40">
+            <FaRocket className="text-white text-4xl" />
           </div>
-
-          {error && (
-            <div className="bg-rose-100 text-rose-600 text-xs font-bold text-center p-3 rounded-2xl mb-4 animate-bounce">
-              {error} 🚀
-            </div>
-          )}
-
-          <form onSubmit={handleVerify2FA} className="space-y-4">
-            <input
-              type="text"
-              value={twoFACode}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setTwoFACode(value);
-                if (error) setError("");
-              }}
-              placeholder="123456"
-              maxLength={6}
-              className="w-full px-6 py-4 rounded-3xl border-2 border-slate-200 text-center text-2xl font-mono tracking-widest focus:border-purple-400 focus:bg-white focus:ring-4 focus:ring-purple-400/20 outline-none transition-all"
-              required
-              disabled={loading}
-              autoFocus
-            />
-
-            <Button
-              type="submit"
-              disabled={loading || twoFACode.length !== 6}
-              className="w-full py-4 rounded-3xl font-black uppercase tracking-widest text-white text-lg bg-gradient-to-r from-purple-500 to-pink-500 disabled:opacity-50"
-            >
-              {loading ? "Memverifikasi..." : "Verifikasi"}
-            </Button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setNeed2FA(false);
-                setTempId("");
-                setTwoFACode("");
-                setUserData(null);
-                setError("");
-              }}
-              className="w-full text-slate-500 text-sm hover:text-slate-700 font-medium"
-              disabled={loading}
-            >
-              Batal
-            </button>
-          </form>
+          <h2 className="text-2xl font-black text-slate-800 mb-3">
+            Registrasi Berhasil! 🎉
+          </h2>
+          <p className="text-slate-600 mb-6">
+            Akun Anda sedang menunggu konfirmasi dari super admin. Anda akan
+            diarahkan ke halaman login...
+          </p>
+          <div className="animate-pulse text-sky-500 font-bold">
+            Mohon tunggu...
+          </div>
         </div>
       </div>
     );
   }
 
-  // Tampilan login normal
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-300 via-indigo-200 to-purple-300 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* OVERLAY ICON PATTERN */}
       <div className="absolute inset-0 pointer-events-none">
         {backgroundIcons.map(({ id, Icon, top, left, color, size, rotate }) => (
           <div
@@ -487,25 +364,49 @@ const AdminLogin = () => {
         ))}
       </div>
 
+      {/* REGISTER CARD */}
       <div className="bg-white/95 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.2)] w-full max-w-md border-4 border-white/80 relative z-10 animate-fade-in-up">
+        {/* Header Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-400 rounded-3xl mx-auto mb-5 flex items-center justify-center shadow-lg shadow-orange-400/40 transform rotate-3 hover:rotate-6 transition-transform">
-            <FaRocket className="text-white text-4xl" />
+            <FaUserPlus className="text-white text-4xl" />
           </div>
 
           <Text
-            textKey="admin_sidebar_title"
+            textKey="admin_register_title"
+            defaultText="Daftar Admin Baru"
             variant="subtitle"
             className="text-slate-800 font-black text-2xl"
           />
           <Text
-            textKey="admin_login_subtitle"
+            textKey="admin_register_subtitle"
+            defaultText="Bergabunglah sebagai admin edukasi"
             variant="body"
             className="text-slate-500 text-sm mt-2 font-medium"
           />
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleRegister} className="space-y-5">
+          {/* Full Name Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-extrabold text-slate-500 ml-2 uppercase tracking-wider">
+              Nama Lengkap
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => {
+                setFullName(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder="John Doe"
+              className="w-full px-6 py-4 rounded-3xl border-2 border-slate-200 outline-none transition-all text-slate-700 font-medium bg-slate-50 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-400/20"
+              required
+              disabled={loading || googleLoading}
+            />
+          </div>
+
+          {/* Email Input */}
           <div className="space-y-2">
             <label className="block text-sm font-extrabold text-slate-500 ml-2 uppercase tracking-wider">
               Email
@@ -524,6 +425,7 @@ const AdminLogin = () => {
             />
           </div>
 
+          {/* Password Input */}
           <div className="space-y-2">
             <label className="block text-sm font-extrabold text-slate-500 ml-2 uppercase tracking-wider">
               Password
@@ -535,13 +437,35 @@ const AdminLogin = () => {
                 setPassword(e.target.value);
                 if (error) setError("");
               }}
-              placeholder="••••••••"
+              placeholder="Minimal 6 karakter"
               className="w-full px-6 py-4 rounded-3xl border-2 border-slate-200 outline-none transition-all text-slate-700 font-medium bg-slate-50 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-400/20"
               required
               disabled={loading || googleLoading}
+              minLength={6}
             />
           </div>
 
+          {/* Confirm Password Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-extrabold text-slate-500 ml-2 uppercase tracking-wider">
+              Konfirmasi Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder="Minimal 6 karakter"
+              className="w-full px-6 py-4 rounded-3xl border-2 border-slate-200 outline-none transition-all text-slate-700 font-medium bg-slate-50 focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-400/20"
+              required
+              disabled={loading || googleLoading}
+              minLength={6}
+            />
+          </div>
+
+          {/* Error Message */}
           {error && (
             <div className="bg-rose-100 text-rose-600 text-xs font-bold text-center p-3 rounded-2xl animate-bounce">
               {error} 🚀
@@ -551,12 +475,15 @@ const AdminLogin = () => {
           <Button
             type="submit"
             disabled={loading || googleLoading}
-            className="w-full py-4 rounded-3xl font-black uppercase tracking-widest text-white text-lg bg-gradient-to-r from-sky-400 to-blue-500 disabled:opacity-50"
+            className="w-full py-4 rounded-3xl font-black uppercase tracking-widest text-white text-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/40 active:translate-y-1 active:shadow-none bg-gradient-to-r from-sky-400 to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
-            {loading ? "Memproses..." : <Text textKey="admin_login_btn" />}
+            <span className="flex items-center justify-center gap-2">
+              {loading ? "Mendaftar..." : "Daftar Sekarang"}
+            </span>
           </Button>
         </form>
 
+        {/* Divider */}
         <div className="flex items-center my-6">
           <div className="flex-1 border-t-2 border-slate-200"></div>
           <span className="px-4 text-slate-400 text-xs font-bold uppercase tracking-wider">
@@ -565,11 +492,12 @@ const AdminLogin = () => {
           <div className="flex-1 border-t-2 border-slate-200"></div>
         </div>
 
+        {/* Google Register Button */}
         <button
           type="button"
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleRegister}
           disabled={loading || googleLoading}
-          className="w-full py-4 rounded-3xl font-bold uppercase tracking-wider text-slate-700 text-base bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 flex items-center justify-center gap-3"
+          className="w-full py-4 rounded-3xl font-bold uppercase tracking-wider text-slate-700 text-base transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl active:translate-y-1 active:shadow-none bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
         >
           {googleLoading ? (
             <span className="flex items-center gap-2">
@@ -598,20 +526,26 @@ const AdminLogin = () => {
           ) : (
             <>
               <FaGoogle className="text-xl" style={{ color: "#4285F4" }} />
-              <span>Login dengan Google</span>
+              <span>Daftar dengan Google</span>
             </>
           )}
         </button>
 
         <div className="text-center mt-6">
           <p className="text-slate-500 text-sm">
-            Belum punya akun?{" "}
+            Sudah punya akun?{" "}
             <Link
-              to="/admin/register"
+              to="/admin/login"
               className="text-sky-600 font-bold hover:text-sky-700 underline"
             >
-              Daftar di sini
+              Login di sini
             </Link>
+          </p>
+        </div>
+
+        <div className="text-center mt-6">
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
+            Sistem Edukasi Interaktif
           </p>
         </div>
       </div>
@@ -619,4 +553,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default AdminRegister;
