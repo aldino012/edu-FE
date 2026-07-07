@@ -46,25 +46,21 @@ const AdminLogin = () => {
 
   const navigate = useNavigate();
 
-  // ✅ BARU: Reset semua state saat component mount
+  // ✅ Reset semua state saat component mount
   useEffect(() => {
-    // Reset state 2FA saat halaman login dibuka
     setNeed2FA(false);
     setTempId("");
     setTwoFACode("");
     setUserData(null);
     setError("");
 
-    // Cek apakah ada token lama di localStorage
     const authData = localStorage.getItem("admin_auth");
     if (authData) {
       try {
         const parsed = JSON.parse(authData);
-        // Jika token masih valid, redirect ke dashboard
         if (parsed.token && parsed.expiry > Date.now()) {
           navigate("/admin/huruf");
         } else {
-          // Token expired, hapus
           localStorage.removeItem("admin_auth");
         }
       } catch (err) {
@@ -88,14 +84,12 @@ const AdminLogin = () => {
         }
 
         if (session) {
-          // ✅ PERBAIKAN: Cek apakah profile ada
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("role, is_approved, full_name")
             .eq("id", session.user.id)
             .single();
 
-          // ✅ Jika profile tidak ada (error code PGRST116 = no rows), buat profile baru
           if (profileError && profileError.code === "PGRST116") {
             console.log(
               "⚠️ Profile tidak ada, membuat profile baru untuk user Google...",
@@ -121,7 +115,6 @@ const AdminLogin = () => {
               return;
             }
 
-            // Setelah profile dibuat, tampilkan halaman pending
             setPendingUser({
               email: session.user.email,
               full_name: fullName,
@@ -180,7 +173,6 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      // ✅ GUNAKAN API_BASE_URL
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -195,7 +187,6 @@ const AdminLogin = () => {
         throw new Error(data.message || "Login gagal");
       }
 
-      // CEK: Apakah butuh 2FA?
       if (data.need_2fa) {
         console.log("🔐 2FA required, showing verification form");
         setNeed2FA(true);
@@ -205,7 +196,6 @@ const AdminLogin = () => {
         return;
       }
 
-      // Login normal (tanpa 2FA)
       console.log("✅ Login successful without 2FA");
       const now = new Date().getTime();
       const authData = {
@@ -238,7 +228,6 @@ const AdminLogin = () => {
 
     try {
       console.log("🔐 Verifying 2FA code...");
-      // ✅ GUNAKAN API_BASE_URL
       const response = await fetch(`${API_BASE_URL}/auth/2fa/verify`, {
         method: "POST",
         headers: {
@@ -258,7 +247,6 @@ const AdminLogin = () => {
 
       console.log("✅ 2FA verification successful");
 
-      // Simpan token final
       const now = new Date().getTime();
       const authData = {
         token: data.token,
@@ -268,7 +256,6 @@ const AdminLogin = () => {
 
       localStorage.setItem("admin_auth", JSON.stringify(authData));
 
-      // Reset state 2FA
       setNeed2FA(false);
       setTempId("");
       setTwoFACode("");
@@ -560,6 +547,7 @@ const AdminLogin = () => {
             />
           </div>
 
+          {/* ❌ FITUR LUPA PASSWORD TELAH DIHAPUS */}
           <div className="space-y-2">
             <label className="block text-sm font-extrabold text-slate-500 ml-2 uppercase tracking-wider">
               Password

@@ -8,43 +8,113 @@ import { FaShieldAlt } from "react-icons/fa";
 // Inisialisasi Supabase Client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Supabase config missing");
+}
+
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ DAFTAR ROUTE PUBLIK (TIDAK PERLU LOGIN & TIDAK PAKAI SIDEBAR)
+  const publicRoutes = [
+    "/admin/login",
+    "/admin/register",
+    "/admin/forgot-password",
+    "/admin/reset-password",
+  ];
+
+  // Cek apakah path saat ini termasuk route publik
+  const isPublicRoute = publicRoutes.some((route) =>
+    location.pathname.startsWith(route),
+  );
 
   useEffect(() => {
-    const authData = JSON.parse(localStorage.getItem("admin_auth") || "{}");
-    if (authData.user) {
-      setUserData(authData.user);
-    }
-  }, []);
+    const checkAuth = () => {
+      console.log("🔍 AdminLayout auth check:", {
+        pathname: location.pathname,
+        isPublicRoute,
+      });
 
-  if (location.pathname === "/admin" || location.pathname === "/admin/") {
-    return <Navigate to="/admin/angka" replace />;
+      // ✅ JIKA ROUTE PUBLIK, SKIP CEK AUTHENTIKASI
+      if (isPublicRoute) {
+        setIsLoading(false);
+        return;
+      }
+
+      const authData = localStorage.getItem("admin_auth");
+
+      if (!authData) {
+        console.warn("⚠️ No auth in AdminLayout, redirecting to login");
+        navigate("/admin/login", { replace: true });
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(authData);
+
+        // Cek token expired
+        if (!parsed.token || parsed.expiry < Date.now()) {
+          console.warn("⚠️ Token expired in AdminLayout");
+          localStorage.removeItem("admin_auth");
+          navigate("/admin/login", { replace: true });
+          return;
+        }
+
+        // Token valid
+        setUserData(parsed.user);
+        setIsLoading(false);
+      } catch (err) {
+        console.error("❌ Error parsing auth:", err);
+        localStorage.removeItem("admin_auth");
+        navigate("/admin/login", { replace: true });
+      }
+    };
+
+    checkAuth();
+  }, [navigate, location.pathname, isPublicRoute]);
+
+  // ✅ JIKA ROUTE PUBLIK, RENDER LANGSUNG <Outlet /> TANPA SIDEBAR & HEADER
+  if (isPublicRoute) {
+    return <Outlet />;
   }
 
+  // Tampilkan loading sambil cek auth (hanya untuk route privat)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Jika tidak ada userData, return null (akan di-redirect oleh useEffect)
+  if (!userData) {
+    return null;
+  }
+
+  // ... rest of your AdminLayout code (Sidebar, Header, dll)
   const activeMenu = location.pathname.split("/")[2] || "";
 
   const handleLogout = async () => {
     console.log("🚪 Logging out...");
-
     try {
-      // PENTING: Ini yang akan menghapus "Ghost Session" Supabase secara tuntas
       await supabase.auth.signOut();
     } catch (err) {
-      console.error("Error signing out from Supabase:", err);
+      console.error("Error signing out:", err);
     }
-
-    // Setelah session Supabase bersih, baru hapus localStorage custom
     localStorage.removeItem("admin_auth");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     sessionStorage.clear();
-
     navigate("/");
   };
 
@@ -81,7 +151,7 @@ const AdminLayout = () => {
         activeMenu={activeMenu}
         setActiveMenu={(id) => navigate(`/admin/${id}`)}
         onLogout={handleLogout}
-        userData={userData} // ✅ TAMBAH: Kirim userData ke Sidebar untuk conditional rendering menu
+        userData={userData}
       />
 
       <div className="flex-1 ml-72 flex flex-col">

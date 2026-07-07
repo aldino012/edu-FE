@@ -17,11 +17,15 @@ import Partgame from "./pages/partgame/Partgame";
 // Pages Admin & Auth
 import AdminLogin from "./pages/admin/login";
 import AdminRegister from "./pages/admin/register";
+// ✅ IMPORT HALAMAN RESET PASSWORD
+import ForgotPassword from "./pages/admin/forgot-password";
+import ResetPassword from "./pages/admin/reset-password";
+
 import ProtectedRoute from "./components/ProtectedRoute";
-import SuperAdminRoute from "./components/SuperAdminRoute"; // ✅ TAMBAH: Import SuperAdminRoute
+import SuperAdminRoute from "./components/SuperAdminRoute";
 
 // ============================================
-// IMPORT ADMIN LAYOUTS & SUB-PAGES (MODULAR)
+// IMPORT ADMIN LAYOUTS & SUB-PAGES
 // ============================================
 import AdminLayout from "./pages/admin/page";
 
@@ -53,7 +57,7 @@ import EditQuiz from "./pages/admin/quiz/edit/page";
 import SecuritySettingsPage from "./pages/admin/twoFactor/SecurityPage";
 import TwoFactorSetupPage from "./pages/admin/twoFactor/SetupPage";
 
-// --- MODUL APPROVAL (Super Admin) ---
+// --- MODUL APPROVAL ---
 import ApprovalPage from "./pages/admin/approval/page";
 
 function App() {
@@ -61,7 +65,7 @@ function App() {
     <Router>
       <main className="antialiased min-h-screen bg-[#244f6f]">
         <Routes>
-          {/* ================= USER ROUTES ================= */}
+          {/* ================= USER ROUTES (PUBLIC) ================= */}
           <Route path="/" element={<Homepage />} />
           <Route path="/huruf" element={<HurufPage />} />
           <Route path="/angka" element={<AngkaPage />} />
@@ -69,14 +73,19 @@ function App() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/partgame" element={<Partgame />} />
 
-          {/* ================= AUTH ROUTES ================= */}
+          {/* ================= AUTH ROUTES (PUBLIC) ================= */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/register" element={<AdminRegister />} />
 
-          {/* ================= ADMIN ROUTES (Protected) ================= */}
+          {/* ✅ ROUTE BARU: LUPA PASSWORD & RESET PASSWORD */}
+          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+          <Route path="/admin/reset-password" element={<ResetPassword />} />
+
+          {/* ================= ADMIN ROUTES (PROTECTED) ================= */}
+          {/* ✅ SEMUA route admin harus di dalam ProtectedRoute */}
           <Route element={<ProtectedRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
-              {/* Redirect otomatis ke menu angka saat pertama kali masuk admin */}
+              {/* Redirect /admin ke /admin/angka */}
               <Route index element={<Navigate to="/admin/angka" replace />} />
 
               {/* === MENU ADMIN ANGKA === */}
@@ -137,7 +146,7 @@ function App() {
             </Route>
           </Route>
 
-          {/* Fallback jika URL tidak dikenal, lempar ke Home */}
+          {/* ================= FALLBACK (404) ================= */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
